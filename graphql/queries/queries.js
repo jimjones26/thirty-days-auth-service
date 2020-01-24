@@ -4,6 +4,8 @@ query GetUserById($id: Int!) {
   td_users(where: {id: {_eq: $id}}) {
     id
     email
+    first_name
+    last_name
     token_version
   }
 }
@@ -15,6 +17,8 @@ query GetUserByEmail($email: String!) {
   td_users(where: {email: {_eq: $email}}) {
     id
     email
+    first_name
+    last_name
     token_version
   }
 }

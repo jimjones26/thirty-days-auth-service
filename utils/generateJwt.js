@@ -12,8 +12,12 @@ module.exports.createRefreshToken = (id, tokenVersion) => {
   })
 }
 
-module.exports.createAccessToken = id => {
-  return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: '15m'
-  })
+module.exports.createAccessToken = (id, email, firstName, lastName) => {
+  return jwt.sign(
+    { id, email, firstName, lastName },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: '15m'
+    }
+  )
 }

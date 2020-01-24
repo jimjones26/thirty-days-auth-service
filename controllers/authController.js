@@ -66,7 +66,12 @@ exports.refresh_tokens = catchAsync(async (req, res, next) => {
     console.log('UPDATED USER TOKEN VERSION: ', updatedUserTokenVersion)
 
     // create an access token
-    const accessToken = await createAccessToken(user.id)
+    const accessToken = await createAccessToken(
+      user.id,
+      user.email,
+      user.first_name,
+      user.last_name
+    )
     console.log('ACCESS TOKEN: ', accessToken)
 
     // send the 2 tokens back in the response
