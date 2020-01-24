@@ -7,17 +7,8 @@ const {
 } = require('./../utils/generateJwt')
 const { transporter, magicLinkEmailTemplate } = require('./../utils/email')
 
-/*
-this route creates a JWT that is sent in a magic link email
-
-for existing users, the token version for the refresh token should be
-incremented by 1, which will invalidate the refresh token and the current
-access token.
-
-for new users, a user should be created first, and then the magic link JWT
-created and sent.
-*/
 exports.login = catchAsync(async (req, res, next) => {
+  // TODO: how to make sure email is well formed?
   const { email } = req.body
   if (!email) {
     return res.status(400).json({
@@ -30,6 +21,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   const token = await createMagicLinkToken(user.id, user.email)
 
+  // TODO: put mail options config into environment variables
   const mailOptions = {
     from: 'sender@server.com',
     html: magicLinkEmailTemplate({
@@ -54,10 +46,6 @@ exports.login = catchAsync(async (req, res, next) => {
   })
 })
 
-/* 
-now i need a route that takes a user id and generates a refresh token and an access token
-then sends it back in the response
-*/
 exports.refresh_tokens = catchAsync(async (req, res, next) => {
   const user = await userModel.getUserById(req.body.id)
 

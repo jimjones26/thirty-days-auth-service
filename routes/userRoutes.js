@@ -13,6 +13,3 @@ router.route('/').post(userController.createUser)
 router.route('/:id').get(userController.getUserById)
 
 module.exports = router
-
-// the only thing this server does is issue and revoke tokens
-// magic link token is a 1hr token signed with a magic link secret,
