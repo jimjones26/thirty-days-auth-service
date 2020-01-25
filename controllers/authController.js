@@ -46,24 +46,24 @@ exports.login = catchAsync(async (req, res, next) => {
   })
 })
 
-exports.refresh_tokens = catchAsync(async (req, res, next) => {
+exports.create_tokens = catchAsync(async (req, res, next) => {
   const user = await userModel.getUserById(req.body.id)
 
   if (user) {
     // increment the token version
-    const newTokenVersion = user.token_version + 1
-    console.log('NEW TOKEN VERSION: ', newTokenVersion)
+    /* const newTokenVersion = user.token_version + 1
+    console.log('NEW TOKEN VERSION: ', newTokenVersion) */
 
     // create a refresh token
-    const refreshToken = await createRefreshToken(user.id, newTokenVersion)
+    const refreshToken = await createRefreshToken(user.id, user.token_version)
     console.log('REFRESH TOKEN: ', refreshToken)
 
     // save the new token version to the user to revoke all previous refresh tokens
-    const updatedUserTokenVersion = await userModel.revokeRefreshToken(
+    /* const updatedUserTokenVersion = await userModel.revokeRefreshToken(
       user.id,
       newTokenVersion
     )
-    console.log('UPDATED USER TOKEN VERSION: ', updatedUserTokenVersion)
+    console.log('UPDATED USER TOKEN VERSION: ', updatedUserTokenVersion) */
 
     // create an access token
     const accessToken = await createAccessToken(
