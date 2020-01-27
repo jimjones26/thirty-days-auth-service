@@ -50,20 +50,31 @@ exports.create_tokens = catchAsync(async (req, res, next) => {
   const user = await userModel.getUserById(req.body.id)
 
   if (user) {
-    // increment the token version
-    /* const newTokenVersion = user.token_version + 1
-    console.log('NEW TOKEN VERSION: ', newTokenVersion) */
-
     // create a refresh token
     const refreshToken = await createRefreshToken(user.id, user.token_version)
     console.log('REFRESH TOKEN: ', refreshToken)
 
-    // save the new token version to the user to revoke all previous refresh tokens
-    /* const updatedUserTokenVersion = await userModel.revokeRefreshToken(
+    // create an access token
+    const accessToken = await createAccessToken(
       user.id,
-      newTokenVersion
+      user.email,
+      user.first_name,
+      user.last_name
     )
-    console.log('UPDATED USER TOKEN VERSION: ', updatedUserTokenVersion) */
+    console.log('ACCESS TOKEN: ', accessToken)
+
+    // send the 2 tokens back in the response
+    res.status(200).json({ refreshToken, accessToken })
+  }
+})
+
+exports.refresh_tokens = catchAsync(async (req, res, next) => {
+  const user = await userModel.getUserById(req.body.id)
+  const tokenVersionMatch = user.token_version === req.body.tokenVersion
+
+  if (user && tokenVersionMatch) {
+    const refreshToken = await createRefreshToken(user.id, user.token_version)
+    console.log('REFRESH TOKEN: ', refreshToken)
 
     // create an access token
     const accessToken = await createAccessToken(
@@ -86,3 +97,9 @@ on the user record. The next time the users access token expires, the app will t
 this could happen when a user hits a logout route, or when the refreshToken expires
 */
 exports.revoke_refresh_tokens = catchAsync(async (req, res, next) => {})
+
+// save the new token version to the user to revoke all previous refresh tokens
+/* const updatedUserTokenVersion = await userModel.revokeRefreshToken(
+      user.id,
+      newTokenVersion
+    ) */
