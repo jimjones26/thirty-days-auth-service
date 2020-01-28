@@ -87,19 +87,24 @@ exports.refresh_tokens = catchAsync(async (req, res, next) => {
 
     // send the 2 tokens back in the response
     res.status(200).json({ refreshToken, accessToken })
+  } else {
+    res.status(200).json({ refreshToken: null, accessToken: null })
   }
 })
 
-/* 
-i need a route that invalidates a refresh token. It does this by changing the tokenVersion field
-on the user record. The next time the users access token expires, the app will try to get a new access and refresh token by validating the refresh token and making sure it's tokenVersion is greater than or equal to the tokenVersion field on the user record. When this check fails, no new tokens will be issued, effectively logging the user out.
+exports.revoke_tokens = catchAsync(async (req, res, next) => {
+  console.log('CALLA: ', req.body.id)
 
-this could happen when a user hits a logout route, or when the refreshToken expires
-*/
-exports.revoke_refresh_tokens = catchAsync(async (req, res, next) => {})
-
-// save the new token version to the user to revoke all previous refresh tokens
-/* const updatedUserTokenVersion = await userModel.revokeRefreshToken(
-      user.id,
-      newTokenVersion
-    ) */
+  const user = await userModel.getUserById(req.body.id)
+  const updatedUserTokenVersion = await userModel.revokeRefreshToken(
+    user.id,
+    user.token_version + 1
+  )
+  console.log(
+    `old token version: ${user.token_version}; new token version: ${updatedUserTokenVersion.token_version}`
+  )
+  res.status(200).json({
+    status: 'ok',
+    message: `user tokens revoked prior to version ${updatedUserTokenVersion.token_version}`
+  })
+})
