@@ -52,7 +52,6 @@ exports.create_tokens = catchAsync(async (req, res, next) => {
   if (user) {
     // create a refresh token
     const refreshToken = await createRefreshToken(user.id, user.token_version)
-    console.log('REFRESH TOKEN: ', refreshToken)
 
     // create an access token
     const accessToken = await createAccessToken(
@@ -61,7 +60,6 @@ exports.create_tokens = catchAsync(async (req, res, next) => {
       user.first_name,
       user.last_name
     )
-    console.log('ACCESS TOKEN: ', accessToken)
 
     // send the 2 tokens back in the response
     res.status(200).json({ refreshToken, accessToken })
@@ -74,7 +72,6 @@ exports.refresh_tokens = catchAsync(async (req, res, next) => {
 
   if (user && tokenVersionMatch) {
     const refreshToken = await createRefreshToken(user.id, user.token_version)
-    console.log('REFRESH TOKEN: ', refreshToken)
 
     // create an access token
     const accessToken = await createAccessToken(
@@ -83,7 +80,6 @@ exports.refresh_tokens = catchAsync(async (req, res, next) => {
       user.first_name,
       user.last_name
     )
-    console.log('ACCESS TOKEN: ', accessToken)
 
     // send the 2 tokens back in the response
     res.status(200).json({ refreshToken, accessToken })
@@ -93,15 +89,10 @@ exports.refresh_tokens = catchAsync(async (req, res, next) => {
 })
 
 exports.revoke_tokens = catchAsync(async (req, res, next) => {
-  console.log('CALLA: ', req.body.id)
-
   const user = await userModel.getUserById(req.body.id)
   const updatedUserTokenVersion = await userModel.revokeRefreshToken(
     user.id,
     user.token_version + 1
-  )
-  console.log(
-    `old token version: ${user.token_version}; new token version: ${updatedUserTokenVersion.token_version}`
   )
   res.status(200).json({
     status: 'ok',
