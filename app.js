@@ -1,6 +1,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const rateLimit = require('express-rate-limit')
+const helmet = require('helmet')
 const cors = require('cors')
 
 const AppError = require('./utils/appError')
@@ -18,14 +19,15 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))
 }
 
-app.use(limiter)
+app.use(helmet())
 app.use(
   cors({
     origin: 'http://localhost:3000',
     credentials: true
   })
 )
-app.use(express.json())
+app.use(limiter)
+app.use(express.json({ limit: '10kb' }))
 app.use((req, res, next) => {
   console.log('request time: ', new Date().toISOString())
 
