@@ -39,7 +39,11 @@ app.use(express.json({ limit: '10kb' }))
 app.use(xss())
 
 // prevent parameter pollution
-app.use(hpp())
+app.use(
+  hpp({
+    whitelist: []
+  })
+)
 
 app.use((req, res, next) => {
   console.log('request time: ', new Date().toISOString())
