@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit')
 const helmet = require('helmet')
 const xss = require('xss-clean')
 const cors = require('cors')
+const hpp = require('hpp')
 
 const AppError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorController')
@@ -21,7 +22,6 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use(helmet())
-app.use(xss())
 app.use(
   cors({
     origin: 'http://localhost:3000',
@@ -37,9 +37,12 @@ app.use(express.json({ limit: '10kb' }))
 
 // data sanitization against XSS
 app.use(xss())
+
+// prevent parameter pollution
+app.use(hpp())
+
 app.use((req, res, next) => {
   console.log('request time: ', new Date().toISOString())
-
   next()
 })
 
