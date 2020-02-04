@@ -102,6 +102,6 @@ exports.revoke_tokens = catchAsync(async (req, res, next) => {
   )
   res.status(200).json({
     status: 'ok',
-    message: `user tokens revoked prior to version ${updatedUserTokenVersion.token_version}`
+    message: `user tokens revoked`
   })
 })
