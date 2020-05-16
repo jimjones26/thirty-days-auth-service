@@ -5,7 +5,7 @@ const {
   createAccessToken,
   createRefreshToken,
 } = require("./../utils/generateJwt");
-const { transporter, magicLinkEmailTemplate } = require("./../utils/email");
+const { transporter, mailOptions } = require("./../utils/email");
 
 /* POST /invite
   Handle user invite request
@@ -17,17 +17,59 @@ const { transporter, magicLinkEmailTemplate } = require("./../utils/email");
   - send invite email (will contain welcome text and magic link)
   - respond with success or error
 */
+exports.invite = catchAsync(async (req, res, next) => {});
 
 /* POST /login
   Handle user login request (send magic link)
-  - grab email from request
-  - make sure email is in valid form
-  - make sure user exists
-    - if yes, continue
-    - if no, respond with user not found
-  - send magic link email
-  - respond with success, access cookie and refresh cookie
+  (this is the only route that does not require a valid cookie from a user)
+  (however, a valid admin JWT will be required when requesting a user be added to Hasura)
 */
+exports.login = catchAsync(async (req, res, next) => {
+  // store email from request
+  const { email } = req.body;
+
+  // make sure email is not null and is well formed
+  if (
+    !email ||
+    (email &&
+      !email.match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      ))
+  ) {
+    return res.status(400).json({
+      status: "error",
+      message: "a valid email is required",
+    });
+  }
+
+  // store user associated with email in request
+  const user = await userModel.getUserByEmail(email);
+
+  if (user) {
+    // if user exists, create a magic link login token
+    const token = await createMagicLinkToken(user.id, user.email);
+
+    // try to send email
+    return transporter.sendMail(mailOptions(user.email, token), (error) => {
+      if (error) {
+        return res.status(500).json({
+          status: "error",
+          message: "cannot send email",
+        });
+      }
+      return res.status(200).json({
+        status: "success",
+        message: `email to ${email} was successfully sent`,
+      });
+    });
+  } else {
+    // no user exists, return with 404 not found
+    return res.status(404).json({
+      status: "error",
+      message: `user with email ${email} does not exist`,
+    });
+  }
+});
 
 /* POST /session
   Handle verifying magic link response (create tokens)
@@ -62,52 +104,6 @@ const { transporter, magicLinkEmailTemplate } = require("./../utils/email");
   - update the user token version in persistence layer
   - send back new cookies with null values
 */
-
-// handles sending the magic link to the users email
-exports.login = catchAsync(async (req, res, next) => {
-  // TODO: how to make sure email is well formed?
-  const { email } = req.body;
-  if (
-    !email ||
-    (email &&
-      !email.match(
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      ))
-  ) {
-    return res.status(400).json({
-      status: "error",
-      message: "an email is required",
-    });
-  }
-
-  const user = await userModel.getUserByEmail(email);
-
-  const token = await createMagicLinkToken(user.id, user.email);
-
-  // TODO: put mail options config into environment variables
-  const mailOptions = {
-    from: "sender@server.com",
-    html: magicLinkEmailTemplate({
-      email,
-      link: `localhost:3000/auth/verify-email/${token}`,
-    }),
-    subject: "Invitation",
-    to: email,
-  };
-
-  return transporter.sendMail(mailOptions, (error) => {
-    if (error) {
-      return res.status(500).json({
-        status: "fail",
-        message: "cannot send email",
-      });
-    }
-    return res.status(200).json({
-      status: "success",
-      message: `email to ${email} was successfully sent`,
-    });
-  });
-});
 
 exports.create_tokens = catchAsync(async (req, res, next) => {
   const user = await userModel.getUserById(req.body.id);
