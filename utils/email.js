@@ -10,16 +10,12 @@ module.exports.transporter = nodemailer.createTransport({
 });
 
 const magicLinkEmailTemplate = ({ email, link }) =>
-  `
-    <p>
+  `<p>
       <b>Hello ${email}</b>
     </p>
-    <p>Please <a href="${link}">click this link</a> to login to this app.</p>
-  `;
+    <p>Please <a href="${link}">click this link</a> to login to this app.</p>`;
 
 module.exports.mailOptions = (email, token) => {
-  console.log("BOO: ", { email, token });
-
   return {
     from: "sender@server.com",
     html: magicLinkEmailTemplate({
