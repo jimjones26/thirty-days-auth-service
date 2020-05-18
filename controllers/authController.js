@@ -1,3 +1,5 @@
+const jwt = require("jsonwebtoken");
+
 const catchAsync = require("./../utils/catchAsync");
 const userModel = require("./../models/userModel");
 const {
@@ -73,15 +75,57 @@ exports.login = catchAsync(async (req, res, next) => {
 
 /* POST /session
   Handle verifying magic link response (create tokens)
-  - grab token from reponse url
-  - verify token
-    - if valid, continue
-    - if invalid, throw invlaid token error
-  - create new access token
-  - ceate new access token cookie
-  - create new refresh token
-  - create new refresh token cookie
 */
+exports.session = catchAsync(async (req, res, next) => {
+  // store token from request
+  const { token } = await req.body;
+
+  // verify the token
+  try {
+    const verified = await jwt.verify(
+      token,
+      process.env.MAGIC_LINK_TOKEN_SECRET
+    );
+
+    // get the user associated with the verified token
+    const user = await userModel.getUserById(verified.id);
+
+    // if there is no user, respond with not found
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "user not found",
+      });
+    } else {
+      // create a refresh token
+      const refreshToken = await createRefreshToken(
+        user.id,
+        user.token_version
+      );
+
+      // create an access token
+      const accessToken = await createAccessToken(
+        user.id,
+        user.email,
+        user.first_name,
+        user.last_name
+      );
+
+      // send the tokens in the response
+      res.status(200).json({
+        status: "success",
+        message: "user session created",
+        accessToken,
+        refreshToken,
+      });
+    }
+  } catch (error) {
+    res.status(401).json({
+      status: "error",
+      message: "token is invalid",
+    });
+  }
+});
 
 /* POST /refresh_tokens
   Handle refreshing the access and refresh tokens

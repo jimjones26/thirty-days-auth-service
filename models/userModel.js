@@ -17,7 +17,7 @@ exports.getUserById = (id) => {
     if (resAsJson.data.td_users.length > 0) {
       return resAsJson.data.td_users[0];
     } else {
-      throw new Error("user not found");
+      return null;
     }
   });
 };
