@@ -20,7 +20,7 @@ module.exports.mailOptions = (email, token) => {
     from: "sender@server.com",
     html: magicLinkEmailTemplate({
       email,
-      link: `localhost:3000/auth/verify-email/${token}`,
+      link: `localhost:3000/verify-email/${token}`,
     }),
     subject: "Invitation",
     to: email,
