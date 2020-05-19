@@ -89,6 +89,9 @@ exports.session = catchAsync(async (req, res, next) => {
 
     // get the user associated with the verified token
     const user = await userModel.getUserById(verified.id);
+    const scopeKeyArray = user.users_scopes.map(function (item) {
+      return item.scope["name"];
+    });
 
     // if there is no user, respond with not found
     if (!user) {
@@ -108,7 +111,8 @@ exports.session = catchAsync(async (req, res, next) => {
         user.id,
         user.email,
         user.first_name,
-        user.last_name
+        user.last_name,
+        scopeKeyArray
       );
 
       // send the tokens in the response

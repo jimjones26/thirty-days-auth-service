@@ -12,9 +12,9 @@ module.exports.createRefreshToken = (id, tokenVersion) => {
   });
 };
 
-module.exports.createAccessToken = (id, email, firstName, lastName) => {
+module.exports.createAccessToken = (id, email, firstName, lastName, scope) => {
   return jwt.sign(
-    { id, email, firstName, lastName },
+    { id, email, firstName, lastName, scope },
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: "15m",

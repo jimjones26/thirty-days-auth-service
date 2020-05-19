@@ -7,9 +7,14 @@ query GetUserById($id: Int!) {
     first_name
     last_name
     token_version
+    users_scopes {
+      scope {
+        name
+      }
+    }
   }
 }
-`
+`;
 
 module.exports.GET_USER_BY_EMAIL = `
 query GetUserByEmail($email: String!) {
@@ -20,9 +25,14 @@ query GetUserByEmail($email: String!) {
     first_name
     last_name
     token_version
+    users_scopes {
+      scope {
+        name
+      }
+    }
   }
 }
-`
+`;
 
 module.exports.INSERT_USER = `
 mutation InsertNewUser($email: String!) {
@@ -34,7 +44,7 @@ mutation InsertNewUser($email: String!) {
     }
   }
 }
-`
+`;
 
 module.exports.INCREMENT_TOKEN_VERSION = `
 mutation IncrementTokenVersion($id: Int!, $tokenVersion: Int!) {
@@ -46,4 +56,4 @@ mutation IncrementTokenVersion($id: Int!, $tokenVersion: Int!) {
     }
   }
 }
-`
+`;
