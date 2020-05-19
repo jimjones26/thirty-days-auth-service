@@ -149,26 +149,6 @@ exports.session = catchAsync(async (req, res, next) => {
   - send back new cookies with null values
 */
 
-exports.create_tokens = catchAsync(async (req, res, next) => {
-  const user = await userModel.getUserById(req.body.id);
-
-  if (user) {
-    // create a refresh token
-    const refreshToken = await createRefreshToken(user.id, user.token_version);
-
-    // create an access token
-    const accessToken = await createAccessToken(
-      user.id,
-      user.email,
-      user.first_name,
-      user.last_name
-    );
-
-    // send the 2 tokens back in the response
-    res.status(200).json({ refreshToken, accessToken });
-  }
-});
-
 exports.refresh_tokens = catchAsync(async (req, res, next) => {
   const user = await userModel.getUserById(req.body.id);
   const tokenVersionMatch = user.token_version === req.body.tokenVersion;
