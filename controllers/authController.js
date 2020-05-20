@@ -195,19 +195,29 @@ exports.refresh_tokens = catchAsync(async (req, res, next) => {
 
 /* POST /revoke_tokens
   Handle revoking tokens (logging user out)
-  - get the user id from the cookie
-  - update the user token version in persistence layer
-  - send back new cookies with null values
 */
-
 exports.revoke_tokens = catchAsync(async (req, res, next) => {
-  const user = await userModel.getUserById(req.body.id);
-  const updatedUserTokenVersion = await userModel.revokeRefreshToken(
-    user.id,
-    user.token_version + 1
-  );
-  res.status(200).json({
-    status: "ok",
-    message: `user tokens revoked`,
-  });
+  const refreshToken = req.body.refreshToken;
+
+  if (refreshToken !== null) {
+    try {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+      );
+
+      const user = await userModel.getUserById(decoded.id);
+
+      await userModel.revokeRefreshToken(user.id, user.token_version + 1);
+      res.status(200).json({
+        status: "success",
+        message: "user tokens revoked",
+      });
+    } catch (error) {
+      res.status(404).json({
+        status: "error",
+        message: "unable to log user out",
+      });
+    }
+  }
 });
