@@ -133,18 +133,65 @@ exports.session = catchAsync(async (req, res, next) => {
 
 /* POST /refresh_tokens
   Handle refreshing the access and refresh tokens
-  - check the validity of the refresh token
-  - if valid, check for existence of user
-  - if invalid, throw error
-  - check that user token version matches refresh token version
-  - if match, continue
-  - if not match, send back access and token cookies with null values
-  - create new access token
-  - create new access token cookie
-  - create new refresh token
-  - create new refresh token cookie
-  - respond with new cookies
 */
+exports.refresh_tokens = catchAsync(async (req, res, next) => {
+  // store refresh token
+  const refreshToken = req.body.refreshToken;
+
+  // check validity of refresh token
+  const decodedToken = await jwt.verify(
+    refreshToken,
+    process.env.REFRESH_TOKEN_SECRET,
+    (error, decoded) => {
+      if (error) {
+        console.log("DECODE ERROR ", error);
+        return null;
+      } else {
+        return decoded;
+      }
+    }
+  );
+
+  if (decodedToken) {
+    // get user associated with token
+    const user = await userModel.getUserById(decodedToken.id);
+    const tokenVersionMatch = user.token_version === decodedToken.tokenVersion;
+
+    const scopeKeyArray = user.users_scopes.map(function (item) {
+      return item.scope["name"];
+    });
+
+    if (user && tokenVersionMatch) {
+      const refreshToken = await createRefreshToken(
+        user.id,
+        user.token_version
+      );
+
+      // create an access token
+      const accessToken = await createAccessToken(
+        user.id,
+        user.email,
+        user.first_name,
+        user.last_name,
+        scopeKeyArray
+      );
+
+      // send the 2 tokens back in the response
+      res.status(200).json({ refreshToken, accessToken });
+    } else {
+      res.status(403).json({
+        status: "error",
+        message: "unable to create new tokens",
+      });
+    }
+  } else {
+    // token is not valid
+    res.status(403).json({
+      status: "error",
+      message: "refresh token is invalid",
+    });
+  }
+});
 
 /* POST /revoke_tokens
   Handle revoking tokens (logging user out)
@@ -152,28 +199,6 @@ exports.session = catchAsync(async (req, res, next) => {
   - update the user token version in persistence layer
   - send back new cookies with null values
 */
-
-exports.refresh_tokens = catchAsync(async (req, res, next) => {
-  const user = await userModel.getUserById(req.body.id);
-  const tokenVersionMatch = user.token_version === req.body.tokenVersion;
-
-  if (user && tokenVersionMatch) {
-    const refreshToken = await createRefreshToken(user.id, user.token_version);
-
-    // create an access token
-    const accessToken = await createAccessToken(
-      user.id,
-      user.email,
-      user.first_name,
-      user.last_name
-    );
-
-    // send the 2 tokens back in the response
-    res.status(200).json({ refreshToken, accessToken });
-  } else {
-    res.status(200).json({ refreshToken: null, accessToken: null });
-  }
-});
 
 exports.revoke_tokens = catchAsync(async (req, res, next) => {
   const user = await userModel.getUserById(req.body.id);
